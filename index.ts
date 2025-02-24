@@ -17,7 +17,7 @@ export default class FieldElement {
     if (!isPrime(prime)) {
       throw new Error(`${prime} is not a prime number`);
     }
-    if (num >= prime || num <= 0) {
+    if (num >= prime || num < 0) {
       throw new Error(`Num ${num} not in field range 0 to ${prime}`);
     }
     this.num = num;
