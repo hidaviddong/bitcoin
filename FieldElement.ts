@@ -79,7 +79,6 @@ export default class FieldElement {
   }
 }
 
-// const a = new FieldElement(7, 19);
-// const b = new FieldElement(5, 19);
-// console.log(a.truediv(b).getNum() === 9);
-// console.log(a.pow(-2).getNum());
+const a = new FieldElement(7, 19);
+const b = new FieldElement(5, 19);
+console.log(a.truediv(b).getNum() === 9);
