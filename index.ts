@@ -79,69 +79,167 @@ export default class FieldElement {
   }
 }
 
-const a = new FieldElement(7, 19);
-const b = new FieldElement(5, 19);
-console.log(a.truediv(b).getNum() === 9);
-console.log(a.pow(-2).getNum());
+// const a = new FieldElement(7, 19);
+// const b = new FieldElement(5, 19);
+// console.log(a.truediv(b).getNum() === 9);
+// console.log(a.pow(-2).getNum());
 
 // 椭圆曲线 y^2 = x^3 + ax + b
 class Point {
-  private x: number;
-  private y: number;
-  private a: number;
-  private b: number;
-  constructor(x: number, y: number, a: number, b: number) {
+  private x: FieldElement | null;
+  private y: FieldElement | null;
+  private a: FieldElement;
+  private b: FieldElement;
+
+  constructor(
+    x: FieldElement | null,
+    y: FieldElement | null,
+    a: FieldElement,
+    b: FieldElement
+  ) {
     this.x = x;
     this.y = y;
     this.a = a;
     this.b = b;
-    if (this.y ** 2 !== this.x ** 3 + a * x + b) {
-      throw new Error(`(${x}, ${y}) is not on the curve`);
-    }
-  }
-  eq(other: Point) {
-    return (
-      this.x === other.x &&
-      this.y === other.y &&
-      this.a === other.a &&
-      this.b === other.b
-    );
-  }
-  neq(other: Point) {
-    return !this.eq(other);
-  }
-  add(other: Point) {
-    if (other.a !== this.a || other.b !== this.b) {
-      throw new Error(`Points ${this}, ${other} are not on the same curve`);
-    }
-    if (!isFinite(other.x) || !isFinite(other.y)) {
-      return new Point(this.x, this.y, this.a, this.b);
+
+    // 处理无穷远点
+    if (x === null && y === null) {
+      return;
     }
 
-    if (this.x + other.x === 0 && this.y + other.y === 0) {
-      return new Point(Infinity, Infinity, this.a, this.b);
-    }
-    if (this.eq(other)) {
-      // 因为P1 = P2,所以需要通过求导来得到斜率。 P1 = (x1,y1), P3 = (x3,y3), P1 + P1 = P3, s = (3x1^2 + a)/(2y1), x3 = s^2 – 2x1, y3 = s(x1 – x3) – y1
-      const slope = (3 * this.x ** 2 + this.a) / (2 * this.y);
-      const x3 = slope ** 2 - 2 * this.x;
-      const y3 = slope * (this.x - x3) - this.y;
-      return new Point(x3, y3, this.a, this.b);
-    } else {
-      // P1 != P2,可以直接计算得到斜率: P1 = (x1,y1), P2 = (x2,y2), P3 = (x3,y3); P1 + P2 = P3, s = (y2 – y1)/(x2 – x1); x3 = s^2– x1 – x2, y3 = s(x1 – x3) – y1
-      if (this.y === 0) {
-        return new Point(Infinity, Infinity, this.a, this.b);
+    // 验证点是否在曲线上
+    if (x !== null && y !== null) {
+      // y^2 = x^3 + ax + b
+      const left = y.pow(2);
+      const right = x.pow(3).add(a.mul(x)).add(b);
+      if (!left.eq(right)) {
+        throw new Error(`(${x.getNum()}, ${y.getNum()}) 不在曲线上`);
       }
-      const slope = (other.y - this.y) / (other.x - this.x);
-      const x3 = slope ** 2 - this.x - other.x;
-      const y3 = slope * (this.x - x3) - this.y;
-      return new Point(x3, y3, this.a, this.b);
     }
   }
+
+  getX(): FieldElement | null {
+    return this.x;
+  }
+
+  getY(): FieldElement | null {
+    return this.y;
+  }
+
+  getA(): FieldElement {
+    return this.a;
+  }
+
+  getB(): FieldElement {
+    return this.b;
+  }
+
+  eq(other: Point): boolean {
+    return (
+      (this.x === null && other.getX() === null) ||
+      (this.x !== null &&
+        other.getX() !== null &&
+        this.y !== null &&
+        other.getY() !== null &&
+        this.x.eq(other.getX()!) &&
+        this.y.eq(other.getY()!) &&
+        this.a.eq(other.getA()) &&
+        this.b.eq(other.getB()))
+    );
+  }
+
+  neq(other: Point): boolean {
+    return !this.eq(other);
+  }
+
+  add(other: Point): this {
+    if (!this.a.eq(other.getA()) || !this.b.eq(other.getB())) {
+      throw new Error(`点不在同一条曲线上`);
+    }
+
+    // 处理无穷远点的情况
+    if (this.x === null) {
+      return this.newInstance(other.getX(), other.getY(), this.a, this.b);
+    }
+    if (other.getX() === null) {
+      return this.newInstance(this.x, this.y, this.a, this.b);
+    }
+
+    // 如果 x 坐标相同但 y 坐标相反，返回无穷远点
+    if (
+      this.x.eq(other.getX()!) &&
+      this.y !== null &&
+      other.getY() !== null &&
+      !this.y.eq(other.getY()!)
+    ) {
+      return this.newInstance(null, null, this.a, this.b);
+    }
+
+    // 如果是同一个点，使用切线公式
+    if (this.eq(other)) {
+      // 如果 y = 0，返回无穷远点
+      if (this.y !== null && this.y.getNum() === 0) {
+        return this.newInstance(null, null, this.a, this.b);
+      }
+
+      // s = (3x1^2 + a) / (2y1)
+      const prime = this.x.getPrime();
+      const three = new FieldElement(3, prime);
+      const two = new FieldElement(2, prime);
+
+      const numerator = this.x.pow(2).mul(three).add(this.a);
+      const denominator = this.y!.mul(two);
+      const s = numerator.truediv(denominator);
+
+      // x3 = s^2 - 2x1
+      const x3 = s.pow(2).sub(this.x.mul(two));
+
+      // y3 = s(x1 - x3) - y1
+      const y3 = s.mul(this.x.sub(x3)).sub(this.y!);
+
+      return this.newInstance(x3, y3, this.a, this.b);
+    } else {
+      // 不同点相加，使用割线公式
+      // s = (y2 - y1) / (x2 - x1)
+      const s = other.getY()!.sub(this.y!).truediv(other.getX()!.sub(this.x));
+
+      // x3 = s^2 - x1 - x2
+      const x3 = s.pow(2).sub(this.x).sub(other.getX()!);
+
+      // y3 = s(x1 - x3) - y1
+      const y3 = s.mul(this.x.sub(x3)).sub(this.y!);
+
+      return this.newInstance(x3, y3, this.a, this.b);
+    }
+  }
+  // 创建新实例的辅助方法
+  protected newInstance(
+    x: FieldElement | null,
+    y: FieldElement | null,
+    a: FieldElement,
+    b: FieldElement
+  ): this {
+    return new Point(x, y, a, b) as this;
+  }
+  toString(): string {
+    if (this.x === null) {
+      return "Point(∞)";
+    }
+    return `Point(${this.x.getNum()}, ${this.y!.getNum()})_${this.a.getNum()}_${this.b.getNum()} FieldF${this.x.getPrime()}`;
+  }
 }
+
 // 3/6 = 0.5
-const p1 = new Point(2, 5, 5, 7);
-const p2 = new Point(-1, -1, 5, 7);
-const p3 = new Point(-1, 1, 5, 7);
-console.log(p1.add(p2)); // P1 != P2
-console.log(p3.add(p3)); // P1 = P2
+// const p1 = new Point(2, 5, 5, 7);
+// const p2 = new Point(-1, -1, 5, 7);
+// const p3 = new Point(-1, 1, 5, 7);
+// console.log(p1.add(p2)); // P1 != P2
+// console.log(p3.add(p3)); // P1 = P2
+
+const a = new FieldElement(0, 223);
+const b = new FieldElement(7, 223);
+const x = new FieldElement(192, 223);
+const y = new FieldElement(105, 223);
+const p = new Point(x, y, a, b);
+
+console.log(p.toString());
