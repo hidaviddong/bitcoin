@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import Point from "./Point";
-import FieldElement from "./FieldElement";
+import Point from "./point";
+import FieldElement from "./fieldElement";
 
 describe("Point", () => {
   const a = new FieldElement(0, 223);

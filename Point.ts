@@ -1,4 +1,4 @@
-import FieldElement from "./FieldElement";
+import FieldElement from "./fieldElement";
 
 export default class Point {
   private x: FieldElement | null;

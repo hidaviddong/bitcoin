@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import FieldElement from "./FieldElement";
+import FieldElement from "./fieldElement";
 
 describe("FieldElement", () => {
   const a = new FieldElement(7, 19);
