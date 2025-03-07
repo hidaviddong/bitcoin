@@ -3,6 +3,7 @@ import Point from "./point";
 import FieldElement from "./fieldElement";
 
 describe("Point", () => {
+  // prime = 223,223可以用8位二进制表示（2⁸ = 256 > 223）,是一个 8 位的椭圆曲线
   const a = new FieldElement(0, 223);
   const b = new FieldElement(7, 223);
   test("(170,142) + (60,139)", () => {
@@ -35,5 +36,25 @@ describe("Point", () => {
       const right = x3.pow(3).add(b);
       expect(left.eq(right)).toBe(true);
     }
+  });
+  test("2*(47,71)=(36,111), 3*(47,71)=(15,137)", () => {
+    //  给定基点 P 和标量 s，计算 s·P 很容易（如代码所示）
+    //  但给定基点 P 和结果点 s·P，找出标量 s 是计算上困难的
+    //  这种单向性质被称为"椭圆曲线离散对数问题"，是椭圆曲线密码学（ECC）安全性的基础。
+
+    /**
+     * 用户选择随机数 s 作为私钥，计算 s·P 作为公钥（P是公共参数）
+     * 即使攻击者知道公钥 s·P，也无法有效计算出私钥 s
+     */
+    const x1 = new FieldElement(47, 223);
+    const y1 = new FieldElement(71, 223);
+    const p1 = new Point(x1, y1, a, b);
+    const p2 = p1.add(p1);
+    expect(p2.getX()?.getNum()).toBe(36);
+    expect(p2.getY()?.getNum()).toBe(111);
+
+    const p3 = p2.add(p1);
+    expect(p3.getX()?.getNum()).toBe(15);
+    expect(p3.getY()?.getNum()).toBe(137);
   });
 });
