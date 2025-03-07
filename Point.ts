@@ -114,10 +114,16 @@ export default class Point {
 
       return this.newInstance(x3, y3, this.a, this.b);
     } else {
+      console.log(7);
       // 不同点相加，使用割线公式
       // s = (y2 - y1) / (x2 - x1)
-      const s = other.getY()!.sub(this.y!).truediv(other.getX()!.sub(this.x));
 
+      const s = other.getY()!.sub(this.y!).truediv(other.getX()!.sub(this.x));
+      const y2_y1 = other.getY()!.sub(this.y!);
+      const x2_x1 = other.getX()!.sub(this.x);
+      // console.log("y2_y1", y2_y1); // 174
+      // console.log("x2_x1", x2_x1); // 48
+      // console.log("div", y2_y1.truediv(x2_x1)); // NaN?
       // x3 = s^2 - x1 - x2
       const x3 = s.pow(2).sub(this.x).sub(other.getX()!);
 

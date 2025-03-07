@@ -68,8 +68,22 @@ export default class FieldElement {
       // 使用费马小定理: a^(-n) = (a^(-1))^n = (a^(p-2))^n
       return this.pow(this.prime - 2).pow(-exponent);
     }
-    const product = this.num ** exponent;
-    return new FieldElement(product % this.prime, this.prime);
+
+    // 对指数取模，根据费马小定理
+    let n = exponent % (this.prime - 1);
+    let result = 1;
+    let base = this.num;
+
+    while (n > 0) {
+      if (n & 1) {
+        // 如果n是奇数
+        result = (result * base) % this.prime;
+      }
+      base = (base * base) % this.prime;
+      n = Math.floor(n / 2); // 将n除以2
+    }
+
+    return new FieldElement(result, this.prime);
   }
   // 利用费马小定理公式：a/b = a⋅b^(p–2)
   truediv(other: FieldElement) {
