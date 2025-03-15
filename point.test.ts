@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import Point from "./point";
+import Point, { Secp256k1Point } from "./point";
 import FieldElement from "./fieldElement";
 
 describe("Point", () => {
@@ -56,5 +56,34 @@ describe("Point", () => {
     const p3 = p2.add(p1);
     expect(p3.getX()?.getNum()).toBe(15);
     expect(p3.getY()?.getNum()).toBe(137);
+  });
+
+  test("rmul", () => {
+    const x1 = new FieldElement(47, 223);
+    const y1 = new FieldElement(71, 223);
+    const p1 = new Point(x1, y1, a, b);
+    const p2 = p1.rmul(2);
+    expect(p2.getX()?.getNum()).toBe(36);
+    expect(p2.getY()?.getNum()).toBe(111);
+  });
+});
+
+describe("Secp256k1Point", () => {
+  const G = Secp256k1Point.G();
+  test("N*G is null", () => {
+    const N =
+      0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n;
+    const nG = G.rmul(N);
+    expect(nG.getX()).toBeNull();
+    expect(nG.getY()).toBeNull();
+  });
+  test("two G", () => {
+    const expectedX2G =
+      0xc6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5n;
+    const expectedY2G =
+      0x1ae168fea63dc339a3c58419466ceaeef7f632653266d0e1236431a950cfe52an;
+    const twoG = G.rmul(2n);
+    expect(twoG.getX()?.getNum()).toBe(expectedX2G);
+    expect(twoG.getY()?.getNum()).toBe(expectedY2G);
   });
 });
