@@ -2,7 +2,6 @@
 import { describe, expect, test } from "bun:test";
 import { PrivateKey } from "./privateKey";
 import { PublicKey } from "./publicKey";
-import { Signature } from "./signature";
 import { Signer } from "./signer";
 import { Verifier } from "./vertify";
 
