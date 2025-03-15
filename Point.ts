@@ -1,4 +1,5 @@
 import FieldElement, { Secp256k1FieldElement } from "./fieldElement";
+import { N } from "./utils";
 
 export default class Point {
   private x: FieldElement | null;
@@ -182,9 +183,6 @@ export class Secp256k1Point {
   private static readonly b = new Secp256k1FieldElement(Secp256k1Point.B);
 
   // secp256k1 的 N (曲线阶)
-  private static readonly N: bigint =
-    0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n;
-
   constructor(
     x: Secp256k1FieldElement | null,
     y: Secp256k1FieldElement | null
@@ -296,7 +294,7 @@ export class Secp256k1Point {
 
   rmul(coefficient: bigint): Secp256k1Point {
     // 对 N 取模，因为 N 是曲线的阶
-    const coefMod = coefficient % Secp256k1Point.N;
+    const coefMod = coefficient % N;
     if (coefMod === 0n) {
       return new Secp256k1Point(null, null);
     }

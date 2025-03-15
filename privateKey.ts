@@ -1,34 +1,19 @@
 import * as crypto from "crypto";
+import { generateRandomKey, N } from "./utils";
 
 export class PrivateKey {
   private key: bigint;
-  // secp256k1 的 N (曲线阶)
-  public static readonly N: bigint =
-    0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n;
-
   constructor(key?: bigint) {
     if (key !== undefined) {
       // 如果提供了私钥，验证它是否在有效范围内
-      if (key <= 0n || key >= PrivateKey.N) {
+      if (key <= 0n || key >= N) {
         throw new Error("Private key must be in range [1, N-1]");
       }
       this.key = key;
     } else {
       // 生成随机私钥
-      this.key = this.generateRandomKey();
+      this.key = generateRandomKey();
     }
-  }
-
-  private generateRandomKey(): bigint {
-    // 生成32字节（256位）的随机数
-    const randomBytes = crypto.randomBytes(32);
-    console.log("randomBytes", randomBytes);
-    let privateKey = 0n;
-    for (const byte of randomBytes) {
-      privateKey = (privateKey << 8n) | BigInt(byte);
-    }
-    privateKey = (privateKey % (PrivateKey.N - 1n)) + 1n;
-    return privateKey;
   }
   public getKey(): bigint {
     return this.key;

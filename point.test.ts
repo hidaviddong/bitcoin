@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import Point, { Secp256k1Point } from "./point";
 import FieldElement from "./fieldElement";
+import { N } from "./utils";
 
 describe("Point", () => {
   // prime = 223,223可以用8位二进制表示（2⁸ = 256 > 223）,是一个 8 位的椭圆曲线
@@ -71,8 +72,6 @@ describe("Point", () => {
 describe("Secp256k1Point", () => {
   const G = Secp256k1Point.G();
   test("N*G is null", () => {
-    const N =
-      0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n;
     const nG = G.rmul(N);
     expect(nG.getX()).toBeNull();
     expect(nG.getY()).toBeNull();
