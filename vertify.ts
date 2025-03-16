@@ -15,8 +15,6 @@ export class Verifier {
     const r = signature.getR();
     const s = signature.getS();
 
-    // 2. 获取曲线的阶N
-
     // 3. 检查r和s是否在[1, N-1]范围内
     if (r <= 0n || r >= N || s <= 0n || s >= N) {
       return false;

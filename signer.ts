@@ -3,6 +3,25 @@ import type { PrivateKey } from "./privateKey";
 import { Signature } from "./signature";
 import { generateRandomKey, N } from "./utils";
 
+/**
+ * 签名时：
+	1.	我们选择随机数 k
+	2.	计算点 R = k×G，并取其 x 坐标作为 r
+	3.	计算 s = (z + r×privateKey) / k
+验证时：
+	1.	计算 u = z/s 和 v = r/s
+	2.	计算 R' = u×G + v×publicKey
+这两个 R 为什么相等？
+数学证明：
+	•	我们知道 publicKey = privateKey×G
+	•	代入公式：R' = u×G + v×publicKey = (z/s)×G + (r/s)×(privateKey×G)
+	•	整理：R' = (z/s + r×privateKey/s)×G = ((z + r×privateKey)/s)×G
+	•	回想 s = (z + r×privateKey)/k，所以 (z + r×privateKey)/s = k
+	•	因此：R' = k×G = R
+所以 R' 的 x 坐标必然等于 r（即 R 的 x 坐标）。
+这证明了签名者确实知道私钥，因为只有知道私钥的人才能创建出使等式成立的 r 和 s 值。
+
+ */
 export class Signer {
   static hash(message: string): bigint {
     const hasher = new Bun.CryptoHasher("sha256");
